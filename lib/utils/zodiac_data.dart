@@ -11,6 +11,7 @@ class ZodiacData {
       element: 'अग्नि',
       planet: 'मंगल',
       color: 0xFFFF6B6B,
+      imageUrl: 'https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Taurus',
@@ -20,6 +21,7 @@ class ZodiacData {
       element: 'पृथ्वी',
       planet: 'शुक्र',
       color: 0xFFFFD93D,
+      imageUrl: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Gemini',
@@ -29,6 +31,7 @@ class ZodiacData {
       element: 'वायु',
       planet: 'बुध',
       color: 0xFF6BCF7F,
+      imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Cancer',
@@ -38,6 +41,7 @@ class ZodiacData {
       element: 'जल',
       planet: 'चंद्रमा',
       color: 0xFF4ECDC4,
+      imageUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Leo',
@@ -47,6 +51,7 @@ class ZodiacData {
       element: 'अग्नि',
       planet: 'सूर्य',
       color: 0xFFFFB347,
+      imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Virgo',
@@ -56,6 +61,7 @@ class ZodiacData {
       element: 'पृथ्वी',
       planet: 'बुध',
       color: 0xFF95E1D3,
+      imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Libra',
@@ -65,6 +71,7 @@ class ZodiacData {
       element: 'वायु',
       planet: 'शुक्र',
       color: 0xFFF38181,
+      imageUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Scorpio',
@@ -74,6 +81,7 @@ class ZodiacData {
       element: 'जल',
       planet: 'मंगल',
       color: 0xFFAA96DA,
+      imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Sagittarius',
@@ -83,6 +91,7 @@ class ZodiacData {
       element: 'अग्नि',
       planet: 'बृहस्पति',
       color: 0xFFFF8C42,
+      imageUrl: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Capricorn',
@@ -92,6 +101,7 @@ class ZodiacData {
       element: 'पृथ्वी',
       planet: 'शनि',
       color: 0xFF6C5CE7,
+      imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Aquarius',
@@ -101,6 +111,7 @@ class ZodiacData {
       element: 'वायु',
       planet: 'शनि',
       color: 0xFF74B9FF,
+      imageUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=400&fit=crop',
     ),
     ZodiacSign(
       name: 'Pisces',
@@ -110,6 +121,7 @@ class ZodiacData {
       element: 'जल',
       planet: 'बृहस्पति',
       color: 0xFFA29BFE,
+      imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop',
     ),
   ];
 

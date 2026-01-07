@@ -23,7 +23,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _addWelcomeMessage() {
     _messages.add(ChatMessage(
-      text: 'नमस्ते! मैं AI पंडित जी हूं। मैं आपकी ज्योतिष, वास्तु, रत्न और आध्यात्मिकता से जुड़े सवालों का जवाब दे सकता हूं। आप कैसे सहायता चाहते हैं?',
+      text: 'नमस्ते! मैं AI पंडित जी हूं। मैं आपकी ज्योतिष, वास्तु, रत्न, मंत्र, दोष विश्लेषण, और आध्यात्मिकता से जुड़े सवालों का जवाब दे सकता हूं। आप कैसे सहायता चाहते हैं?',
       isUser: false,
       timestamp: DateTime.now(),
     ));
@@ -33,7 +33,6 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty || _isLoading) return;
 
-    // Add user message
     setState(() {
       _messages.add(ChatMessage(
         text: text,
@@ -46,9 +45,17 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.clear();
     _scrollToBottom();
 
-    // Get AI response
     try {
-      final response = await AIService.chatWithAI(text);
+      final conversationHistory = _messages
+          .where((msg) => !msg.isUser)
+          .take(3)
+          .map((msg) => msg.text)
+          .toList();
+      
+      final response = await AIService.chatWithAI(
+        text,
+        conversationHistory: conversationHistory,
+      );
       setState(() {
         _messages.add(ChatMessage(
           text: response,
@@ -99,26 +106,60 @@ class _ChatScreenState extends State<ChatScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.deepPurple.shade900,
-              Colors.purple.shade700,
+              Color(0xFF6C5CE7),
+              Color(0xFF8B7AE8),
+              Color(0xFFA29BFE),
             ],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // App Bar
-              Padding(
-                padding: const EdgeInsets.all(16.0),
+              // Enhanced App Bar
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => Navigator.pop(context),
+                        borderRadius: BorderRadius.circular(25),
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                        ),
+                      ),
                     ),
-                    CircleAvatar(
-                      backgroundColor: Colors.amber,
-                      child: Icon(Icons.stars, color: Colors.deepPurple),
+                    SizedBox(width: 12),
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.amber.shade400, Colors.amber.shade600],
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.amber.withOpacity(0.3),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: Icon(Icons.stars_rounded, color: Colors.white, size: 20),
                     ),
                     SizedBox(width: 12),
                     Expanded(
@@ -131,14 +172,36 @@ class _ChatScreenState extends State<ChatScreen> {
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
+                              letterSpacing: 0.5,
                             ),
                           ),
-                          Text(
-                            'ऑनलाइन',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.green.shade300,
-                            ),
+                          SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade300,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.green.withOpacity(0.5),
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'ऑनलाइन',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -151,7 +214,8 @@ class _ChatScreenState extends State<ChatScreen> {
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(20),
+                  physics: BouncingScrollPhysics(),
                   itemCount: _messages.length + (_isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == _messages.length) {
@@ -162,54 +226,93 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
 
-              // Input Area
+              // Enhanced Input Area
               Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withOpacity(0.15),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
+                      blurRadius: 20,
+                      offset: Offset(0, -5),
                     ),
                   ],
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(25),
+                child: SafeArea(
+                  top: false,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextField(
+                            controller: _messageController,
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'अपना प्रश्न लिखें...',
+                              hintStyle: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontWeight: FontWeight.normal,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 14,
+                              ),
+                            ),
+                            maxLines: null,
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _sendMessage(),
+                          ),
                         ),
-                        child: TextField(
-                          controller: _messageController,
-                          decoration: InputDecoration(
-                            hintText: 'अपना प्रश्न लिखें...',
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
+                      ),
+                      SizedBox(width: 12),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _sendMessage,
+                          borderRadius: BorderRadius.circular(30),
+                          child: Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.amber.shade400, Colors.amber.shade600],
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.amber.withOpacity(0.4),
+                                  blurRadius: 15,
+                                  offset: Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.send_rounded,
+                              color: Colors.white,
+                              size: 24,
                             ),
                           ),
-                          maxLines: null,
-                          textInputAction: TextInputAction.send,
-                          onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
-                    ),
-                    SizedBox(width: 12),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.amber,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.send, color: Colors.deepPurple),
-                        onPressed: _sendMessage,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -228,37 +331,69 @@ class _ChatScreenState extends State<ChatScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!message.isUser) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.amber,
-              child: Icon(Icons.stars, size: 18, color: Colors.deepPurple),
+            Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.amber.shade400, Colors.amber.shade600],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.amber.withOpacity(0.3),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: Icon(Icons.stars_rounded, size: 18, color: Colors.white),
             ),
-            SizedBox(width: 8),
+            SizedBox(width: 10),
           ],
           Flexible(
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               decoration: BoxDecoration(
                 color: message.isUser
-                    ? Colors.amber
-                    : Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.95),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                  bottomLeft: Radius.circular(message.isUser ? 20 : 4),
+                  bottomRight: Radius.circular(message.isUser ? 4 : 20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 10,
+                    offset: Offset(0, 3),
+                  ),
+                ],
               ),
               child: Text(
                 message.text,
                 style: TextStyle(
-                  color: message.isUser ? Colors.deepPurple : Colors.white,
+                  color: message.isUser ? Color(0xFF2D3436) : Color(0xFF2D3436),
                   fontSize: 15,
+                  height: 1.5,
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
           ),
           if (message.isUser) ...[
-            SizedBox(width: 8),
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.white.withOpacity(0.3),
-              child: Icon(Icons.person, size: 18, color: Colors.white),
+            SizedBox(width: 10),
+            Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.5),
+                  width: 2,
+                ),
+              ),
+              child: Icon(Icons.person_rounded, size: 18, color: Colors.white),
             ),
           ],
         ],
@@ -271,24 +406,47 @@ class _ChatScreenState extends State<ChatScreen> {
       padding: EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: Colors.amber,
-            child: Icon(Icons.stars, size: 18, color: Colors.deepPurple),
-          ),
-          SizedBox(width: 8),
           Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                colors: [Colors.amber.shade400, Colors.amber.shade600],
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.amber.withOpacity(0.3),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: Icon(Icons.stars_rounded, size: 18, color: Colors.white),
+          ),
+          SizedBox(width: 10),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.95),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+                bottomLeft: Radius.circular(4),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
             child: SizedBox(
-              width: 20,
-              height: 20,
+              width: 24,
+              height: 24,
               child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6C5CE7)),
               ),
             ),
           ),
@@ -297,4 +455,3 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
-

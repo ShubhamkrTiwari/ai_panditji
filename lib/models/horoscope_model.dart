@@ -54,6 +54,7 @@ class ZodiacSign {
   final String element;
   final String planet;
   final int color;
+  final String? imageUrl;
 
   ZodiacSign({
     required this.name,
@@ -63,6 +64,7 @@ class ZodiacSign {
     required this.element,
     required this.planet,
     required this.color,
+    this.imageUrl,
   });
 }
 
