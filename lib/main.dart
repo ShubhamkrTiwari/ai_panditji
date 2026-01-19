@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'screens/home_screen.dart';
@@ -48,6 +49,17 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'NotoSans',
       ),
+      // Add localization support
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', 'US'), // English
+        Locale('hi', 'IN'), // Hindi
+      ],
+      locale: const Locale('hi', 'IN'), // Default to Hindi
       home: const HomeScreen(),
     );
   }

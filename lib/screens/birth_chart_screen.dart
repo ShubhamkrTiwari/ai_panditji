@@ -18,52 +18,123 @@ class _BirthChartScreenState extends State<BirthChartScreen> {
   ZodiacSign? _zodiacSign;
 
   Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      locale: Locale('hi', 'IN'),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Color(0xFFFF6B6B),
-              onPrimary: Colors.white,
+    try {
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: _birthDate ?? DateTime.now().subtract(Duration(days: 365 * 25)), // Default to 25 years ago
+        firstDate: DateTime(1900),
+        lastDate: DateTime.now(),
+        locale: Locale('hi', 'IN'),
+        helpText: 'जन्म तिथि चुनें',
+        cancelText: 'रद्द करें',
+        confirmText: 'चुनें',
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Color(0xFFFF6B6B),
+                onPrimary: Colors.white,
+                surface: Colors.white,
+                onSurface: Color(0xFF2D3436),
+              ),
+              dialogBackgroundColor: Colors.white,
             ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        _birthDate = picked;
-        _zodiacSign = ZodiacData.getZodiacByDate(picked);
-      });
+            child: child ?? SizedBox(),
+          );
+        },
+      );
+      if (picked != null && picked != _birthDate) {
+        setState(() {
+          _birthDate = picked;
+          _zodiacSign = ZodiacData.getZodiacByDate(picked);
+        });
+      }
+    } catch (e) {
+      // Fallback if locale fails
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: _birthDate ?? DateTime.now().subtract(Duration(days: 365 * 25)),
+        firstDate: DateTime(1900),
+        lastDate: DateTime.now(),
+        helpText: 'जन्म तिथि चुनें',
+        cancelText: 'रद्द करें',
+        confirmText: 'चुनें',
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Color(0xFFFF6B6B),
+                onPrimary: Colors.white,
+                surface: Colors.white,
+                onSurface: Color(0xFF2D3436),
+              ),
+            ),
+            child: child ?? SizedBox(),
+          );
+        },
+      );
+      if (picked != null && picked != _birthDate) {
+        setState(() {
+          _birthDate = picked;
+          _zodiacSign = ZodiacData.getZodiacByDate(picked);
+        });
+      }
     }
   }
 
   Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Color(0xFFFF6B6B),
-              onPrimary: Colors.white,
+    try {
+      final TimeOfDay? picked = await showTimePicker(
+        context: context,
+        initialTime: _birthTime ?? TimeOfDay.now(),
+        helpText: 'जन्म समय चुनें',
+        cancelText: 'रद्द करें',
+        confirmText: 'चुनें',
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Color(0xFFFF6B6B),
+                onPrimary: Colors.white,
+                surface: Colors.white,
+                onSurface: Color(0xFF2D3436),
+              ),
+              dialogBackgroundColor: Colors.white,
             ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        _birthTime = picked;
-      });
+            child: child ?? SizedBox(),
+          );
+        },
+      );
+      if (picked != null && picked != _birthTime) {
+        setState(() {
+          _birthTime = picked;
+        });
+      }
+    } catch (e) {
+      // Fallback
+      final TimeOfDay? picked = await showTimePicker(
+        context: context,
+        initialTime: _birthTime ?? TimeOfDay.now(),
+        helpText: 'जन्म समय चुनें',
+        cancelText: 'रद्द करें',
+        confirmText: 'चुनें',
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Color(0xFFFF6B6B),
+                onPrimary: Colors.white,
+              ),
+            ),
+            child: child ?? SizedBox(),
+          );
+        },
+      );
+      if (picked != null && picked != _birthTime) {
+        setState(() {
+          _birthTime = picked;
+        });
+      }
     }
   }
 
@@ -138,7 +209,7 @@ class _BirthChartScreenState extends State<BirthChartScreen> {
               SizedBox(height: 16),
               _buildInfoRow(
                 'जन्म तिथि',
-                DateFormat('dd/MM/yyyy').format(_birthDate!),
+                _formatDate(_birthDate!),
                 Icons.calendar_today_rounded,
               ),
               SizedBox(height: 16),
@@ -297,6 +368,14 @@ class _BirthChartScreenState extends State<BirthChartScreen> {
     );
   }
 
+  String _formatDate(DateTime date) {
+    try {
+      return DateFormat('dd/MM/yyyy', 'hi').format(date);
+    } catch (e) {
+      return DateFormat('dd/MM/yyyy').format(date);
+    }
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -400,7 +479,7 @@ class _BirthChartScreenState extends State<BirthChartScreen> {
                   _buildDateField(
                     label: 'जन्म तिथि',
                     value: _birthDate != null
-                        ? DateFormat('dd/MM/yyyy').format(_birthDate!)
+                        ? _formatDate(_birthDate!)
                         : null,
                     onTap: _selectDate,
                     icon: Icons.calendar_today_rounded,
