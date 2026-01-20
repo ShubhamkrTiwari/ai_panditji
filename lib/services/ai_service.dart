@@ -1,8 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_generative_ai/google_generative_ai.dart';
 
-class AIService {
+class AIService with ChangeNotifier {
   // Note: Replace with your actual API key
   static const String _geminiApiKey = 'YOUR_GEMINI_API_KEY';
   
@@ -1020,4 +1021,3 @@ $sign1 और $sign2 राशि की मिलान रिपोर्ट:
 ''';
   }
 }
-

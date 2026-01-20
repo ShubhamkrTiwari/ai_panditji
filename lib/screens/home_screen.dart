@@ -1,3 +1,4 @@
+import 'package:ai_panditji/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -131,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void dispose() {
     _animationController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -206,18 +208,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ],
               ),
             ),
-            // Chat Screen (Placeholder)
-            Container(
-              color: backgroundColor,
-              child: const Center(child: Text('Chat Screen', style: TextStyle(color: Colors.white))),
-            ),
+            // Chat Screen
+            const ChatScreen(),
             // Compatibility Screen
             const CompatibilityScreen(),
-            // Settings Screen (Placeholder)
-            Container(
-              color: backgroundColor,
-              child: const Center(child: Text('Settings Screen', style: TextStyle(color: Colors.white))),
-            ),
+            // Settings Screen
+            const SettingsScreen(),
           ],
         ),
         bottomNavigationBar: _buildBottomNavigationBar(),
