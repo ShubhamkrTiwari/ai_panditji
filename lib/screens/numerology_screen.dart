@@ -1,4 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+
+// Colors
+const Color primaryColor = Color(0xFF6C63FF);
+const Color backgroundColor = Color(0xFF0F0F1E);
+const Color cardColor = Color(0xFF1E1E2E);
+const Color textPrimary = Colors.white;
+const Color textSecondary = Color(0xFFA0A0B2);
 
 class NumerologyScreen extends StatefulWidget {
   const NumerologyScreen({super.key});
@@ -16,19 +25,21 @@ class _NumerologyScreenState extends State<NumerologyScreen> {
   void _calculateNumerology() {
     if (_nameController.text.isEmpty || _birthDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('कृपया नाम और जन्म तिथि दर्ज करें')),
+        SnackBar(
+          content: const Text('कृपया नाम और जन्म तिथि दर्ज करें'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
       return;
     }
 
-    // Calculate Life Path Number
     int day = _birthDate!.day;
     int month = _birthDate!.month;
     int year = _birthDate!.year;
 
     int lifePath = _reduceToSingleDigit(day + month + year);
-    
-    // Calculate Destiny Number from name
     int destiny = _calculateNameNumber(_nameController.text);
 
     setState(() {
@@ -93,7 +104,7 @@ class _NumerologyScreenState extends State<NumerologyScreen> {
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _birthDate ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
@@ -110,186 +121,145 @@ class _NumerologyScreenState extends State<NumerologyScreen> {
     super.dispose();
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: Text('अंक ज्योतिष'),
-        backgroundColor: Colors.purple.shade700,
-        foregroundColor: Colors.white,
+        title: Text('अंक ज्योतिष', style: GoogleFonts.poppins(color: textPrimary, fontWeight: FontWeight.bold)),
+        backgroundColor: backgroundColor,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: textPrimary),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        physics: const BouncingScrollPhysics(),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Name Input
-            Text(
-              'नाम',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            SizedBox(height: 8),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                hintText: 'अपना नाम दर्ज करें',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            SizedBox(height: 16),
-
-            // Birth Date
-            Text(
-              'जन्म तिथि',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            SizedBox(height: 8),
-            InkWell(
-              onTap: _selectDate,
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, color: Colors.purple.shade700),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _birthDate != null
-                            ? '${_birthDate!.day}/${_birthDate!.month}/${_birthDate!.year}'
-                            : 'जन्म तिथि चुनें',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: _birthDate != null
-                              ? Colors.black
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 24),
-
-            // Calculate Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _calculateNumerology,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple.shade700,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'गणना करें',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            SizedBox(height: 24),
-
-            // Results
-            if (lifePathNumber != null && destinyNumber != null) ...[
-              _buildNumberCard(
-                'जीवन पथ अंक',
-                lifePathNumber!,
-                _getNumberMeaning(lifePathNumber!),
-                Colors.blue,
-              ),
-              SizedBox(height: 12),
-              _buildNumberCard(
-                'भाग्य अंक',
-                destinyNumber!,
-                _getNumberMeaning(destinyNumber!),
-                Colors.purple,
-              ),
-            ],
+            _buildInputCard(),
+            const SizedBox(height: 24),
+            if (lifePathNumber != null && destinyNumber != null)
+              _buildResults(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNumberCard(String title, int number, String meaning, Color color) {
+  Widget _buildInputCard() {
     return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                number.toString(),
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+          _buildTextField(_nameController, 'नाम'),
+          const SizedBox(height: 16),
+          _buildDateTimePicker(),
+          const SizedBox(height: 24),
+          Center(
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.calculate_rounded, size: 18),
+              label: Text('गणना करें', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              onPressed: _calculateNumerology,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
-          SizedBox(height: 16),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return TextField(
+      controller: controller,
+      style: const TextStyle(color: textPrimary),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: textSecondary),
+        filled: true,
+        fillColor: backgroundColor,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        prefixIcon: const Icon(Icons.person_outline, color: textSecondary),
+      ),
+    );
+  }
+  
+  Widget _buildDateTimePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('जन्म तिथि', style: GoogleFonts.roboto(color: textSecondary, fontSize: 12)),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: _selectDate,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _birthDate != null ? DateFormat('dd/MM/yyyy').format(_birthDate!) : 'जन्म तिथि चुनें',
+                  style: GoogleFonts.roboto(color: textPrimary, fontSize: 16),
+                ),
+                const Icon(Icons.calendar_today_outlined, color: textSecondary, size: 20),
+              ],
             ),
           ),
-          SizedBox(height: 8),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResults() {
+    return Column(
+      children: [
+        _buildNumberCard('जीवन पथ अंक', lifePathNumber!, _getNumberMeaning(lifePathNumber!), primaryColor, Icons.person_search_rounded),
+        const SizedBox(height: 16),
+        _buildNumberCard('भाग्य अंक', destinyNumber!, _getNumberMeaning(destinyNumber!), Colors.orange, Icons.star_border_rounded),
+      ],
+    );
+  }
+  
+  Widget _buildNumberCard(String title, int number, String meaning, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(width: 12),
+              Text(title, style: GoogleFonts.poppins(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            number.toString(),
+            style: GoogleFonts.poppins(fontSize: 48, fontWeight: FontWeight.bold, color: color),
+          ),
+          const SizedBox(height: 8),
           Text(
             meaning,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-              height: 1.5,
-            ),
             textAlign: TextAlign.center,
+            style: GoogleFonts.roboto(color: textSecondary, fontSize: 14, height: 1.5),
           ),
         ],
       ),
     );
   }
 }
-

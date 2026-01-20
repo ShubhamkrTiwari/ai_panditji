@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../utils/zodiac_data.dart';
-import '../models/horoscope_model.dart';
+
+// Colors
+const Color primaryColor = Color(0xFF6C63FF);
+const Color backgroundColor = Color(0xFF0F0F1E);
+const Color cardColor = Color(0xFF1E1E2E);
+const Color textPrimary = Colors.white;
+const Color textSecondary = Color(0xFFA0A0B2);
 
 class BirthChartScreen extends StatefulWidget {
   const BirthChartScreen({super.key});
@@ -11,663 +17,136 @@ class BirthChartScreen extends StatefulWidget {
 }
 
 class _BirthChartScreenState extends State<BirthChartScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  DateTime? _birthDate;
-  TimeOfDay? _birthTime;
-  final TextEditingController _birthPlaceController = TextEditingController();
-  ZodiacSign? _zodiacSign;
+  final _nameController = TextEditingController();
+  final _placeController = TextEditingController();
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
 
-  Future<void> _selectDate() async {
-    try {
-      final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: _birthDate ?? DateTime.now().subtract(Duration(days: 365 * 25)), // Default to 25 years ago
-        firstDate: DateTime(1900),
-        lastDate: DateTime.now(),
-        locale: Locale('hi', 'IN'),
-        helpText: 'जन्म तिथि चुनें',
-        cancelText: 'रद्द करें',
-        confirmText: 'चुनें',
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.light(
-                primary: Color(0xFFFF6B6B),
-                onPrimary: Colors.white,
-                surface: Colors.white,
-                onSurface: Color(0xFF2D3436),
-              ),
-              dialogBackgroundColor: Colors.white,
-            ),
-            child: child ?? SizedBox(),
-          );
-        },
-      );
-      if (picked != null && picked != _birthDate) {
-        setState(() {
-          _birthDate = picked;
-          _zodiacSign = ZodiacData.getZodiacByDate(picked);
-        });
-      }
-    } catch (e) {
-      // Fallback if locale fails
-      final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: _birthDate ?? DateTime.now().subtract(Duration(days: 365 * 25)),
-        firstDate: DateTime(1900),
-        lastDate: DateTime.now(),
-        helpText: 'जन्म तिथि चुनें',
-        cancelText: 'रद्द करें',
-        confirmText: 'चुनें',
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.light(
-                primary: Color(0xFFFF6B6B),
-                onPrimary: Colors.white,
-                surface: Colors.white,
-                onSurface: Color(0xFF2D3436),
-              ),
-            ),
-            child: child ?? SizedBox(),
-          );
-        },
-      );
-      if (picked != null && picked != _birthDate) {
-        setState(() {
-          _birthDate = picked;
-          _zodiacSign = ZodiacData.getZodiacByDate(picked);
-        });
-      }
-    }
-  }
+  Map<String, dynamic>? _birthChartData;
 
-  Future<void> _selectTime() async {
-    try {
-      final TimeOfDay? picked = await showTimePicker(
-        context: context,
-        initialTime: _birthTime ?? TimeOfDay.now(),
-        helpText: 'जन्म समय चुनें',
-        cancelText: 'रद्द करें',
-        confirmText: 'चुनें',
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.light(
-                primary: Color(0xFFFF6B6B),
-                onPrimary: Colors.white,
-                surface: Colors.white,
-                onSurface: Color(0xFF2D3436),
-              ),
-              dialogBackgroundColor: Colors.white,
-            ),
-            child: child ?? SizedBox(),
-          );
-        },
-      );
-      if (picked != null && picked != _birthTime) {
-        setState(() {
-          _birthTime = picked;
-        });
-      }
-    } catch (e) {
-      // Fallback
-      final TimeOfDay? picked = await showTimePicker(
-        context: context,
-        initialTime: _birthTime ?? TimeOfDay.now(),
-        helpText: 'जन्म समय चुनें',
-        cancelText: 'रद्द करें',
-        confirmText: 'चुनें',
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.light(
-                primary: Color(0xFFFF6B6B),
-                onPrimary: Colors.white,
-              ),
-            ),
-            child: child ?? SizedBox(),
-          );
-        },
-      );
-      if (picked != null && picked != _birthTime) {
-        setState(() {
-          _birthTime = picked;
-        });
-      }
-    }
-  }
-
-  void _generateChart() {
-    if (_nameController.text.isEmpty ||
-        _birthDate == null ||
-        _birthTime == null ||
-        _birthPlaceController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('कृपया सभी जानकारी भरें'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      return;
-    }
-
-    showDialog(
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
       context: context,
-      builder: (context) => _buildChartDialog(),
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(1920), 
+      lastDate: DateTime.now(),
     );
-  }
-
-  Widget _buildChartDialog() {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Container(
-        padding: EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(Icons.account_circle_rounded, color: Colors.white, size: 24),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      'जन्म कुंडली',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D3436),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.pop(context),
-                    color: Colors.grey,
-                  ),
-                ],
-              ),
-              SizedBox(height: 24),
-              _buildInfoRow('नाम', _nameController.text, Icons.person_rounded),
-              SizedBox(height: 16),
-              _buildInfoRow(
-                'जन्म तिथि',
-                _formatDate(_birthDate!),
-                Icons.calendar_today_rounded,
-              ),
-              SizedBox(height: 16),
-              _buildInfoRow(
-                'जन्म समय',
-                '${_birthTime!.hour}:${_birthTime!.minute.toString().padLeft(2, '0')}',
-                Icons.access_time_rounded,
-              ),
-              SizedBox(height: 16),
-              _buildInfoRow('जन्म स्थान', _birthPlaceController.text, Icons.location_on_rounded),
-              if (_zodiacSign != null) ...[
-                SizedBox(height: 24),
-                Divider(),
-                SizedBox(height: 24),
-                Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(_zodiacSign!.color).withOpacity(0.1),
-                        Color(_zodiacSign!.color).withOpacity(0.05),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Color(_zodiacSign!.color).withOpacity(0.3),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        _zodiacSign!.symbol,
-                        style: TextStyle(fontSize: 48),
-                      ),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _zodiacSign!.hindiName,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2D3436),
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              _zodiacSign!.name,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF636E72),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(Icons.water_drop_rounded, size: 16, color: Color(0xFF636E72)),
-                                SizedBox(width: 4),
-                                Text(
-                                  _zodiacSign!.element,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF636E72),
-                                  ),
-                                ),
-                                SizedBox(width: 16),
-                                Icon(Icons.auto_awesome_rounded, size: 16, color: Color(0xFF636E72)),
-                                SizedBox(width: 4),
-                                Text(
-                                  _zodiacSign!.planet,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF636E72),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFFF6B6B),
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'बंद करें',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value, IconData icon) {
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Color(0xFFFF6B6B).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, size: 20, color: Color(0xFFFF6B6B)),
-        ),
-        SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF636E72),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3436),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    try {
-      return DateFormat('dd/MM/yyyy', 'hi').format(date);
-    } catch (e) {
-      return DateFormat('dd/MM/yyyy').format(date);
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
     }
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _birthPlaceController.dispose();
-    super.dispose();
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime ?? TimeOfDay.now(),
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
+  }
+
+  void _generateKundali() {
+    // This is sample data. In a real app, you would use an astrology engine 
+    // or API to calculate this based on birth date, time, and place.
+    setState(() {
+      _birthChartData = {
+        'ascendant_details': {
+          'sign': 'तुला', 
+          'lord': 'शुक्र',
+          'nakshatra': 'चित्रा', 
+          'pada': 3
+        },
+        'd1_chart': {
+          1: ['Lagna'], 2: ['Ketu'], 4: ['Shani'], 5: ['Guru'], 7: ['Chandrama'],
+          8: ['Rahu', 'Mangal'], 10: ['Surya', 'Budh'], 12: ['Shukra']
+        },
+        'd9_chart': { // Navamsha Chart Data
+          1: ['Lagna', 'Guru'], 2: [], 3: ['Shani', 'Ketu'], 5: ['Shukra'], 7: ['Surya'], 
+          9: ['Rahu', 'Chandrama'], 10: ['Budh'], 11: ['Mangal']
+        },
+        'planets': [
+          {'name': 'सूर्य', 'sign': 'कर्क', 'house': 10, 'degree': '15.2°', 'nakshatra': 'पुष्य'},
+          {'name': 'चंद्रमा', 'sign': 'मिथुन', 'house': 7, 'degree': '23.1°', 'nakshatra': 'पुनर्वसु'},
+          {'name': 'मंगल', 'sign': 'वृषभ', 'house': 8, 'degree': '7.8°', 'nakshatra': 'कृत्तिका'},
+          {'name': 'बुध', 'sign': 'कर्क', 'house': 10, 'degree': '28.4°', 'nakshatra': 'आश्लेषा'},
+          {'name': 'गुरु', 'sign': 'तुला', 'house': 5, 'degree': '11.5°', 'nakshatra': 'चित्रा'},
+          {'name': 'शुक्र', 'sign': 'कन्या', 'house': 12, 'degree': '19.0°', 'nakshatra': 'हस्त'},
+          {'name': 'शनि', 'sign': 'धनु', 'house': 4, 'degree': '2.3°', 'nakshatra': 'मूल'},
+          {'name': 'राहु', 'sign': 'वृषभ', 'house': 8, 'degree': '14.6°', 'nakshatra': 'रोहिणी'},
+          {'name': 'केतु', 'sign': 'वृश्चिक', 'house': 2, 'degree': '14.6°', 'nakshatra': 'अनुराधा'},
+        ],
+        'dasha': [
+          {'planet': 'केतु', 'start': '2018-05-15', 'end': '2025-05-15'},
+          {'planet': 'शुक्र', 'start': '2025-05-15', 'end': '2045-05-15'},
+          {'planet': 'सूर्य', 'start': '2045-05-15', 'end': '2051-05-15'},
+          {'planet': 'चंद्रमा', 'start': '2051-05-15', 'end': '2061-05-15'},
+        ]
+      };
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F7FA),
-      body: CustomScrollView(
-        physics: BouncingScrollPhysics(),
-        slivers: [
-          // Enhanced App Bar
-          SliverAppBar(
-            expandedHeight: 120,
-            floating: false,
-            pinned: true,
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            leading: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => Navigator.pop(context),
-                borderRadius: BorderRadius.circular(25),
-                child: Container(
-                  margin: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.arrow_back_rounded, color: Colors.white),
-                ),
-              ),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: EdgeInsets.only(left: 20, bottom: 16),
-              title: Text(
-                'जन्म कुंडली',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-              ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFFFF6B6B),
-                      Color(0xFFFF8E8E),
-                      Color(0xFFFFB3B3),
-                    ],
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: -50,
-                      top: -50,
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.1),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: Text('कुंडली बनाएं', style: GoogleFonts.poppins(color: textPrimary, fontWeight: FontWeight.bold)),
+        backgroundColor: backgroundColor,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: textPrimary),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          children: [
+            _buildInputCard(),
+            const SizedBox(height: 20),
+            if (_birthChartData != null) _buildChartAndDetails(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputCard() {
+     // ... (Input card remains the same)
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTextField(_nameController, 'नाम'),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(child: _buildDateTimePicker('जन्म तिथि', _selectedDate != null ? DateFormat('dd/MM/yyyy').format(_selectedDate!) : 'चुनें', () => _selectDate(context))),
+              const SizedBox(width: 16),
+              Expanded(child: _buildDateTimePicker('जन्म समय', _selectedTime?.format(context) ?? 'चुनें', () => _selectTime(context))),
+            ],
           ),
-
-          // Content
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Form Fields - Enhanced
-                  _buildTextField(
-                    controller: _nameController,
-                    label: 'नाम',
-                    hint: 'अपना नाम दर्ज करें',
-                    icon: Icons.person_rounded,
-                  ),
-                  SizedBox(height: 20),
-
-                  _buildDateField(
-                    label: 'जन्म तिथि',
-                    value: _birthDate != null
-                        ? _formatDate(_birthDate!)
-                        : null,
-                    onTap: _selectDate,
-                    icon: Icons.calendar_today_rounded,
-                  ),
-                  SizedBox(height: 20),
-
-                  _buildDateField(
-                    label: 'जन्म समय',
-                    value: _birthTime != null
-                        ? '${_birthTime!.hour}:${_birthTime!.minute.toString().padLeft(2, '0')}'
-                        : null,
-                    onTap: _selectTime,
-                    icon: Icons.access_time_rounded,
-                  ),
-                  SizedBox(height: 20),
-
-                  _buildTextField(
-                    controller: _birthPlaceController,
-                    label: 'जन्म स्थान',
-                    hint: 'जन्म स्थान दर्ज करें',
-                    icon: Icons.location_on_rounded,
-                  ),
-                  SizedBox(height: 32),
-
-                  // Zodiac Preview - Enhanced
-                  if (_zodiacSign != null)
-                    Container(
-                      padding: EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(_zodiacSign!.color).withOpacity(0.15),
-                            Color(_zodiacSign!.color).withOpacity(0.05),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Color(_zodiacSign!.color).withOpacity(0.3),
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(_zodiacSign!.color).withOpacity(0.1),
-                            blurRadius: 15,
-                            offset: Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Color(_zodiacSign!.color).withOpacity(0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              _zodiacSign!.symbol,
-                              style: TextStyle(fontSize: 48),
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _zodiacSign!.hindiName,
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF2D3436),
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                Text(
-                                  _zodiacSign!.name,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: Color(0xFF636E72),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.5),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.water_drop_rounded, size: 14, color: Color(0xFF636E72)),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            _zodiacSign!.element,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Color(0xFF636E72),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.5),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.auto_awesome_rounded, size: 14, color: Color(0xFF636E72)),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            _zodiacSign!.planet,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Color(0xFF636E72),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  SizedBox(height: 32),
-
-                  // Generate Button - Enhanced
-                  Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
-                      ),
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFFFF6B6B).withOpacity(0.4),
-                          blurRadius: 20,
-                          offset: Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _generateChart,
-                        borderRadius: BorderRadius.circular(28),
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.account_circle_rounded, color: Colors.white, size: 24),
-                              SizedBox(width: 12),
-                              Text(
-                                'कुंडली बनाएं',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+          const SizedBox(height: 16),
+          _buildTextField(_placeController, 'जन्म स्थान'),
+          const SizedBox(height: 24),
+          Center(
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: Text('कुंडली बनाएं', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              onPressed: _generateKundali,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
@@ -676,57 +155,37 @@ class _BirthChartScreenState extends State<BirthChartScreen> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-  }) {
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return TextField(
+      controller: controller,
+      style: const TextStyle(color: textPrimary),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: textSecondary),
+        filled: true,
+        fillColor: backgroundColor,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      ),
+    );
+  }
+
+  Widget _buildDateTimePicker(String label, String value, VoidCallback onTap) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3436),
-            letterSpacing: 0.3,
-          ),
-        ),
-        SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200, width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: controller,
-            style: TextStyle(
-              color: Color(0xFF2D3436),
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+        Text(label, style: const TextStyle(color: textSecondary, fontSize: 12)),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(12),
             ),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: TextStyle(
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.normal,
-              ),
-              prefixIcon: Icon(icon, color: Color(0xFFFF6B6B)),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [Text(value, style: const TextStyle(color: textPrimary)), const Icon(Icons.calendar_today, color: textSecondary, size: 16)],
             ),
           ),
         ),
@@ -734,65 +193,191 @@ class _BirthChartScreenState extends State<BirthChartScreen> {
     );
   }
 
-  Widget _buildDateField({
-    required String label,
-    required String? value,
-    required VoidCallback onTap,
-    required IconData icon,
-  }) {
+  Widget _buildChartAndDetails() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3436),
-            letterSpacing: 0.3,
-          ),
+        _buildAscendantDetails(),
+        const SizedBox(height: 24),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _buildChartSection('जन्म कुंडली (D1)', _birthChartData!['d1_chart'])),
+            const SizedBox(width: 16),
+            Expanded(child: _buildChartSection('नवांश (D9)', _birthChartData!['d9_chart'])),
+          ],
         ),
-        SizedBox(height: 12),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200, width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(icon, color: Color(0xFFFF6B6B)),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      value ?? 'चुनें',
-                      style: TextStyle(
-                        color: value != null ? Color(0xFF2D3436) : Colors.grey.shade500,
-                        fontSize: 16,
-                        fontWeight: value != null ? FontWeight.w600 : FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                  Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF636E72)),
-                ],
-              ),
+        const SizedBox(height: 24),
+        _buildSectionTitle('विमशोत्तरी दशा'),
+        _buildDashaTable(),
+        const SizedBox(height: 24),
+        _buildSectionTitle('ग्रह स्थिति'),
+        _buildPlanetsTable(),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(title, style: GoogleFonts.poppins(color: textPrimary, fontSize: 20, fontWeight: FontWeight.bold));
+  }
+  
+  Widget _buildAscendantDetails() {
+    final details = _birthChartData!['ascendant_details'];
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          _buildSectionTitle('लग्न विवरण'),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildDetailItem('लग्न राशि', details['sign']), 
+              _buildDetailItem('नक्षत्र', details['nakshatra']), 
+              _buildDetailItem('स्वामी', details['lord']),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String title, String value) {
+    return Column(
+      children: [
+        Text(title, style: GoogleFonts.roboto(color: textSecondary, fontSize: 14)),
+        const SizedBox(height: 4),
+        Text(value, style: GoogleFonts.poppins(color: textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildChartSection(String title, Map<dynamic, dynamic> chartData) {
+    return Column(
+      children: [
+        Text(title, style: GoogleFonts.poppins(color: textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Container(
+          height: 150, 
+          width: 150,
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: CustomPaint(
+            painter: _KundaliPainter(),
+            child: Stack(
+              children: List.generate(12, (i) {
+                int houseNumber = (i + 1);
+                return _buildHouseContent(houseNumber, chartData[houseNumber.toString()] ?? [], _getHouseAlignment(houseNumber));
+              }),
             ),
           ),
         ),
       ],
     );
   }
+
+  Alignment _getHouseAlignment(int houseNumber) {
+    switch (houseNumber) {
+      case 1: return const Alignment(0, -0.7);
+      case 2: return const Alignment(0.7, -0.7);
+      case 3: return const Alignment(0.7, 0);
+      case 4: return const Alignment(0.7, 0.7);
+      case 5: return const Alignment(0, 0.7);
+      case 6: return const Alignment(-0.7, 0.7);
+      case 7: return const Alignment(-0.7, 0);
+      case 8: return const Alignment(-0.7, -0.7);
+      case 9: return const Alignment(-0.35, -0.35);
+      case 10: return const Alignment(0.35, -0.35);
+      case 11: return const Alignment(0, 0);
+      case 12: return const Alignment(-0.35, 0.35);
+      default: return Alignment.center;
+    }
+  }
+
+  Widget _buildHouseContent(int houseNumber, List<dynamic> planets, Alignment alignment) {
+    return Align(
+      alignment: alignment,
+      child: Text(
+        planets.join(' '),
+        style: const TextStyle(color: textPrimary, fontSize: 9, fontWeight: FontWeight.bold),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildPlanetsTable() {
+    final planets = _birthChartData!['planets'] as List<dynamic>;
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Table(
+        border: TableBorder.all(color: backgroundColor, width: 1.5),
+        columnWidths: const {
+          0: FlexColumnWidth(2), 1: FlexColumnWidth(2), 2: FlexColumnWidth(1.5), 3: FlexColumnWidth(2)
+        },
+        children: [
+          TableRow(
+            decoration: const BoxDecoration(color: backgroundColor),
+            children: ['ग्रह', 'राशि', 'डिग्री', 'नक्षत्र'].map((h) => Center(child: Padding(padding: const EdgeInsets.all(12.0), child: Text(h, style: const TextStyle(color: textPrimary, fontWeight: FontWeight.bold))))).toList(),
+          ),
+          ...planets.map((p) {
+            return TableRow(
+              children: [p['name'], p['sign'], p['degree'], p['nakshatra']].map((cell) => Center(child: Padding(padding: const EdgeInsets.all(10.0), child: Text(cell, style: const TextStyle(color: textSecondary))))).toList(),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDashaTable() {
+    final dashas = _birthChartData!['dasha'] as List<dynamic>;
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Table(
+        border: TableBorder.all(color: backgroundColor, width: 1.5),
+        children: [
+          TableRow(
+            decoration: const BoxDecoration(color: backgroundColor),
+            children: ['महादशा', 'आरंभ तिथि', 'अंतिम तिथि'].map((h) => Center(child: Padding(padding: const EdgeInsets.all(12.0), child: Text(h, style: const TextStyle(color: textPrimary, fontWeight: FontWeight.bold))))).toList(),
+          ),
+          ...dashas.map((d) {
+            return TableRow(
+              children: [d['planet'], d['start'], d['end']].map((cell) => Center(child: Padding(padding: const EdgeInsets.all(10.0), child: Text(cell, style: const TextStyle(color: textSecondary))))).toList(),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+}
+
+class _KundaliPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = textSecondary.withOpacity(0.5)
+      ..strokeWidth = 1.0;
+
+    // Outer square
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+    // Cross lines
+    canvas.drawLine(Offset(0, 0), Offset(size.width, size.height), paint);
+    canvas.drawLine(Offset(size.width, 0), Offset(0, size.height), paint);
+    // Inner diamond
+    canvas.drawLine(Offset(size.width / 2, 0), Offset(size.width, size.height / 2), paint);
+    canvas.drawLine(Offset(size.width, size.height / 2), Offset(size.width / 2, size.height), paint);
+    canvas.drawLine(Offset(size.width / 2, size.height), Offset(0, size.height / 2), paint);
+    canvas.drawLine(Offset(0, size.height / 2), Offset(size.width / 2, 0), paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
