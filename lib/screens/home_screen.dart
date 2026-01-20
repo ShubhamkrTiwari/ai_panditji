@@ -42,6 +42,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   int _currentCarouselIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  int _bottomNavIndex = 0; // For BottomNavigationBar
+  final PageController _pageController = PageController(initialPage: 0);
 
   // Sample data for features
   final List<Map<String, dynamic>> features = [
@@ -155,31 +157,70 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   }
 
+  void _onBottomNavTapped(int index) {
+    setState(() {
+      _bottomNavIndex = index;
+      _pageController.jumpToPage(index);
+    });
+  }
+
+  Future<bool> _onWillPop() async {
+    if (_bottomNavIndex != 0) {
+      setState(() {
+        _bottomNavIndex = 0;
+        _pageController.jumpToPage(0);
+      });
+      return false; // Don't exit the app, just go to home
+    }
+    return true; // Allow exit if already on home
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildAppBar(),
-              const SizedBox(height: 16),
-              _buildWelcomeSection(),
-              const SizedBox(height: 24),
-              _buildHoroscopeCard(),
-              const SizedBox(height: 24),
-              _buildFeaturesGrid(),
-              const SizedBox(height: 24),
-              _buildDailyPredictions(),
-              const SizedBox(height: 24),
-              _buildZodiacCarousel(),
-              const SizedBox(height: 32),
-            ],
-          ),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        body: PageView(
+          controller: _pageController,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            // Home Screen
+            SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildAppBar(),
+                  const SizedBox(height: 16),
+                  _buildWelcomeSection(),
+                  const SizedBox(height: 24),
+                  _buildHoroscopeCard(),
+                  const SizedBox(height: 24),
+                  _buildFeaturesGrid(),
+                  const SizedBox(height: 24),
+                  _buildDailyPredictions(),
+                  const SizedBox(height: 24),
+                  _buildZodiacCarousel(),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+            // Chat Screen (Placeholder)
+            Container(
+              color: backgroundColor,
+              child: const Center(child: Text('Chat Screen', style: TextStyle(color: Colors.white))),
+            ),
+            // Compatibility Screen
+            const CompatibilityScreen(),
+            // Settings Screen (Placeholder)
+            Container(
+              color: backgroundColor,
+              child: const Center(child: Text('Settings Screen', style: TextStyle(color: Colors.white))),
+            ),
+          ],
         ),
+        bottomNavigationBar: _buildBottomNavigationBar(),
       ),
     );
   }
@@ -710,6 +751,55 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      margin: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BottomNavigationBar(
+          currentIndex: _bottomNavIndex,
+          onTap: _onBottomNavTapped,
+          backgroundColor: Colors.transparent,
+          selectedItemColor: primaryColor,
+          unselectedItemColor: textSecondary,
+          type: BottomNavigationBarType.fixed,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_filled),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_rounded),
+              label: 'Chat',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(FontAwesomeIcons.heartPulse),
+              label: 'Compatibility',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings_rounded),
+              label: 'Settings',
+            ),
+          ],
+        ),
+      ),
     );
   }
 
